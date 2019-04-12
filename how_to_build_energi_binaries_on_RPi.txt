@@ -1,0 +1,121 @@
+######################################
+# Steps to build energi on Raspberry Pi
+# RPi Ubuntu Image: ubuntu-18.04.2-preinstalled-server-arm64+raspi3.img.xz
+#
+# You can also see Github document
+# https://github.com/energicryptocurrency/energi/blob/master/doc/build-unix.md
+######################################
+
+sudo apt update 
+sudo apt upgrade -y
+
+# Install dependency packages
+sudo apt-get install build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils
+
+# May not need to install the boost packages; dependency package compiles boost
+# Did it per build document on Github
+sudo apt-get install libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev
+sudo apt-get install libboost-all-dev
+
+sudo apt-get install software-properties-common
+sudo add-apt-repository ppa:bitcoin/bitcoin
+sudo apt-get update
+# BerkeleyDB is required for the wallet
+sudo apt-get install libdb4.8-dev libdb4.8++-dev
+
+# Optional miniupnpc may be used for UPnP port mapping.
+sudo apt-get install libminiupnpc-dev
+
+# Build with Qt 5 (recommended) you need the following:
+sudo apt-get install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev protobuf-compiler
+
+# For download
+sudo apt-get wget curl -y
+
+# Add 2GB swap space
+sudo apt-get install dphys-swapfile
+sudo echo "CONF_SWAPSIZE=2048" >> /etc/dphys-swapfile
+sudo dphys-swapfile setup
+sudo dphys-swapfile swapon
+
+# Download latest Energi source code
+cd /usr/local/src
+git clone https://github.com/energicryptocurrency/energi.git
+
+# Compile dependency packages and executables for ARM64
+cd energi
+cd depends
+#add NO_QT=1 to the make if not GUI not desired
+make HOST=aarch64-linux-gnu
+cd ..
+./autogen.sh
+./configure --prefix=$PWD/depends/aarch64-linux-gnu --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++
+make
+
+# Copy binaries
+make install
+cd /usr/local/src/energi/depends/aarch64-linux-gnu
+cp -r * /home/ubuntu/energi/.
+
+# Turn swap off
+sudo dphys-swapfile swapoff
+sudo dphys-swapfile uninstall
+
+# Setup environment to run energid daemon
+mkdir $HOME/.energicore
+cd .energicore
+wget https://www.dropbox.com/s/gsaqiry3h1ho3nh/blocks_n_chains.tar.gz?dl=1 -O energiblocks
+tar -xvzf energiblocks
+rm energiblocks
+
+# ONLY to sync with network.  This process takes a long time.
+echo "staking=0" > energi.conf
+# sftp wallet.dat
+energid &
+
+# Run to check sync status
+energi-cli mnsync status
+
+# wait till sync with network; you should see the following fron the previous command
+# "AssetName": "MASTERNODE_SYNC_FINISHED"
+# Stop energid
+energi-cli stop
+
+#
+# IMPORTANT: stop all other staking on this wallet by putting "staking=0" in energi.conf
+#            and restarting client
+#
+
+# Update energi.conf to run in daemon mode
+#rpcuser=user (alphanumeric only) 
+#rpcpassword=password (alphanumeric only) 
+echo "daemon=1" > energi.conf
+echo "rpcallowip=127.0.0.1" >> energi.conf
+echo "rpcuser=Us3rn4me" >> energi.conf
+echo "rpcpassword=p4ssw0rD" >> energi.conf
+
+# Restart energid
+energid
+
+# Run to check sync status
+energi-cli mnsync status
+
+# wait till sync with network; you should see the following fron the previous command
+# "AssetName": "MASTERNODE_SYNC_FINISHED"
+energi-cli walletpassphrase <wallet_pass_phrase> 999999999 true
+
+# Run following to check staking status
+# You will need 1 NRG in the wallet with over 100 confirms to stake
+energi-cli getstakingstatus
+
+# The output of the above should like like this:
+#
+#{
+#  "validtime": true,
+#  "haveconnections": true,
+#  "walletunlocked": true,
+#  "mintablecoins": true,
+#  "enoughcoins": true,
+#  "mnsync": true,
+#  "staking": true
+#}
