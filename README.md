@@ -5,6 +5,7 @@ I am providing Energi (NRG) staking related files in this repository
 ```RPi Ubuntu Image: ubuntu-18.04.2-preinstalled-server-arm64+raspi3.img.xz```
 
 ```You can find original documentation at Github:```
+
 ```   https://github.com/energicryptocurrency/energi/blob/master/doc/build-unix.md```
 
 ### Donations
