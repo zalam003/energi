@@ -1,10 +1,12 @@
-######################################
-# Steps to build energi on Raspberry Pi
-# RPi Ubuntu Image: ubuntu-18.04.2-preinstalled-server-arm64+raspi3.img.xz
+########################################################################################
+# Description: Steps to build energi on Raspberry Pi
+# Version:     1.1
+# Dependency:  RPi Ubuntu Image: 
+#                 ubuntu-18.04.2-preinstalled-server-arm64+raspi3.img.xz
 #
-# You can also see Github document
+#                 You can also see Github document
 # https://github.com/energicryptocurrency/energi/blob/master/doc/build-unix.md
-######################################
+########################################################################################
 
 sudo apt update 
 sudo apt upgrade -y
@@ -15,7 +17,7 @@ sudo apt-get install build-essential libtool autotools-dev automake pkg-config l
 # May not need to install the boost packages; dependency package compiles boost
 # Did it per build document on Github
 sudo apt-get install libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev
-sudo apt-get install libboost-all-dev
+#sudo apt-get install libboost-all-dev
 
 sudo apt-get install software-properties-common
 sudo add-apt-repository ppa:bitcoin/bitcoin
@@ -30,7 +32,15 @@ sudo apt-get install libminiupnpc-dev
 sudo apt-get install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev protobuf-compiler
 
 # For download
-sudo apt-get wget curl -y
+sudo apt-get install wget curl -y
+
+# DOwnload GCC-8 and G++-8
+#sudo apt-get install gcc-8 g++-8 -y
+#sudo apt install libtool* -y 
+
+# clean up
+sudo apt autoremove -y
+sudo apt clean
 
 # Add 2GB swap space
 sudo apt-get install dphys-swapfile
@@ -46,16 +56,20 @@ git clone https://github.com/energicryptocurrency/energi.git
 cd energi
 cd depends
 #add NO_QT=1 to the make if not GUI not desired
+#make HOST=aarch64-linux-gnu CC=gcc-8 CXX=g++-8
 make HOST=aarch64-linux-gnu
 cd ..
 ./autogen.sh
+#./configure --prefix=$PWD/depends/aarch64-linux-gnu --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++ CC=gcc-8 CXX=g++-8
 ./configure --prefix=$PWD/depends/aarch64-linux-gnu --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++
 make
 
 # Copy binaries
 make install
 cd /usr/local/src/energi/depends/aarch64-linux-gnu
-cp -r * /home/ubuntu/energi/.
+mkdir /usr/local/energi
+sudo ubuntu:ubuntu /usr/local/energi
+cp -r * /usr/local/energi/.
 
 # Turn swap off
 sudo dphys-swapfile swapoff
@@ -64,13 +78,26 @@ sudo dphys-swapfile uninstall
 # Setup environment to run energid daemon
 mkdir $HOME/.energicore
 cd .energicore
-wget https://www.dropbox.com/s/gsaqiry3h1ho3nh/blocks_n_chains.tar.gz?dl=1 -O energiblocks
-tar -xvzf energiblocks
-rm energiblocks
+wget https://www.dropbox.com/s/gsaqiry3h1ho3nh/blocks_n_chains.tar.gz?dl=1 -O energiblocks.tar.gz
+tar -xvzf energiblocks.tar.gz
+rm energiblocks.tar.gz
 
 # ONLY to sync with network.  This process takes a long time.
-echo "staking=0" > energi.conf
-# sftp wallet.dat
+cat <<EOF > $HOME/.energicore/energi.conf
+daemon=1
+staking=0
+rpcallowip=127.0.0.1
+rpcuser=Us3rn4me
+rpcpassword=p4ssw0rD
+EOF
+
+#
+# copy wallet.dat from your PC to $HOME/.energicore
+#
+######=====> sftp wallet.dat
+#
+
+# Start energi daemon to sync with network.  This may take a while the first time
 energid &
 
 # Run to check sync status
@@ -78,8 +105,12 @@ energi-cli mnsync status
 
 # wait till sync with network; you should see the following fron the previous command
 # "AssetName": "MASTERNODE_SYNC_FINISHED"
+
 # Stop energid
 energi-cli stop
+
+# Save "sync only" conf file
+cp $HOME/.energicore/energi.conf $HOME/.energicore/energi.conf-sync
 
 #
 # IMPORTANT: stop all other staking on this wallet by putting "staking=0" in energi.conf
@@ -87,12 +118,19 @@ energi-cli stop
 #
 
 # Update energi.conf to run in daemon mode
+# Change following two:
 #rpcuser=user (alphanumeric only) 
 #rpcpassword=password (alphanumeric only) 
-echo "daemon=1" > energi.conf
-echo "rpcallowip=127.0.0.1" >> energi.conf
-echo "rpcuser=Us3rn4me" >> energi.conf
-echo "rpcpassword=p4ssw0rD" >> energi.conf
+cat <<EOF > $HOME/.energicore/energi.conf
+daemon=1
+staking=1
+rpcallowip=127.0.0.1
+rpcuser=Us3rn4me
+rpcpassword=p4ssw0rD
+EOF
+
+# Make a backup of staking conf file
+cp $HOME/.energicore/energi.conf $HOME/.energicore/energi.conf-staking
 
 # Restart energid
 energid
