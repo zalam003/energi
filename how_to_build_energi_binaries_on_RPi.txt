@@ -1,6 +1,6 @@
 ########################################################################################
 # Description: Steps to build energi on Raspberry Pi
-# Version:     1.1
+# Version:     1.2
 # Dependency:  RPi Ubuntu Image: 
 #                 ubuntu-18.04.2-preinstalled-server-arm64+raspi3.img.xz
 #
@@ -51,9 +51,10 @@ sudo dphys-swapfile swapon
 # Download latest Energi source code
 cd /usr/local/src
 git clone https://github.com/energicryptocurrency/energi.git
+cd energi
+git checkout v2.2.1
 
 # Compile dependency packages and executables for ARM64
-cd energi
 cd depends
 #add NO_QT=1 to the make if not GUI not desired
 #make HOST=aarch64-linux-gnu CC=gcc-8 CXX=g++-8
@@ -61,7 +62,7 @@ make HOST=aarch64-linux-gnu
 cd ..
 ./autogen.sh
 #./configure --prefix=$PWD/depends/aarch64-linux-gnu --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++ CC=gcc-8 CXX=g++-8
-./configure --prefix=$PWD/depends/aarch64-linux-gnu --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++
+./configure --prefix=/usr/local/energi --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++
 make
 
 # Copy binaries
