@@ -68,9 +68,11 @@ make
 # Copy binaries
 make install
 cd /usr/local/src/energi/depends/aarch64-linux-gnu
-mkdir /usr/local/energi
-sudo ubuntu:ubuntu /usr/local/energi
-cp -r * /usr/local/energi/.
+mkdir $HOME/energi
+cp energi-cli $HOME/energi/.
+cp energid $HOME/energi/.
+cp energi-qt $HOME/energi/.
+cp energi-tx $HOME/energi/.
 
 # Turn swap off
 sudo dphys-swapfile swapoff
