@@ -18,7 +18,7 @@ Follow instructions listed in
 
 For step #8, download the RPi 
 
-   https://github.com/zalam003/energi/releases/download/v2.2.1/energi-2.2.1-arm64-ubuntu.tar.gz
+   wget https://github.com/zalam003/energi/releases/download/v2.2.1/energi-2.2.1-arm64-ubuntu.tar.gz
 
 
 ### Donations
