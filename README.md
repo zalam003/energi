@@ -2,7 +2,7 @@
 I am providing Energi (NRG) staking related files in this repository
 
 ### Build RPi using the following OS image
-RPi Ubuntu Image: ubuntu-18.04.2-preinstalled-server-arm64+raspi3.img.xz (http://cdimage.ubuntu.com/ubuntu/releases/18.04/release/ubuntu-18.04.2-preinstalled-server-arm64+raspi3.img.xz)
+RPi Ubuntu Image: ubuntu-18.04.2-preinstalled-server-arm64+raspi3.img.xz (http://cdimage.ubuntu.com/ubuntu/releases/18.04/release/ubuntu-18.04.3-preinstalled-server-arm64+raspi3.img.xz)
 
 ### To build energi on Raspberry Pi from scratch
 Follow instructions in how_to_build_energi_binaries_on_RPi.txt
